@@ -1,15 +1,21 @@
 using ManagementBook.Api.Endpoints;
+using ManagementBook.Api.Extensions;
+using ManagementBook.Api.Handlers;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMvc(options => options.Filters.Add(new ErrorHandlerAttribute()));
+builder.Services.Configure<RequestLocalizationOptions>(op =>
+{
+    op.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("pt-BR");
+});
+builder.Services.AddDependencies(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -22,8 +28,3 @@ app.UseHttpsRedirection();
 app.BookGetEndpoint();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)( TemperatureC / 0.5556 );
-}

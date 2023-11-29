@@ -1,15 +1,12 @@
 ﻿namespace ManagementBook.Application.Tests.Books;
 
-using AutoMapper;
 using FluentAssertions;
-using LanguageExt.Common;
 using ManagementBook.Application.Features.Books.Handlers;
 using ManagementBook.Application.Features.Books.Queries;
 using ManagementBook.Domain.Books;
-using MediatR;
+using ManagementBook.Infra.Cross.Errors;
 using Moq;
 using System.Data.SqlTypes;
-using System.Runtime.CompilerServices;
 
 [TestFixture]
 public class BookCollectionHandlerTests
@@ -61,7 +58,7 @@ public class BookCollectionHandlerTests
     }
 
     [Test]
-    public async Task BookCollectionHandlerTests_Handle_BookCollectionQuery_ShouldBeSqlTruncateException_ButReturnIsException()
+    public async Task BookCollectionHandlerTests_Handle_BookCollectionQuery_ShouldBeSqlTruncateException_ButReturnIsInternalError()
     {
         //arrange
         CancellationTokenSource cancellationTokenSource = new();
@@ -78,7 +75,7 @@ public class BookCollectionHandlerTests
         result.IsFaulted.Should().BeTrue();
         result.IfFail(fail =>
         {
-            fail.Should().BeOfType<SqlTruncateException>();
+            fail.Should().BeOfType<InternalError>();
             _mockRepository.Verify();
             _mockRepository.VerifyNoOtherCalls();
         });

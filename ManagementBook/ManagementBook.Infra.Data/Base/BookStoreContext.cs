@@ -3,9 +3,16 @@
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Data.Features.Books;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+
 public class BookStoreContext : DbContext
 {
     public virtual DbSet<Book> Books { get; set; }
+    
+    public BookStoreContext(DbContextOptions<BookStoreContext> configuration) : base(configuration)
+    {
+        Database.EnsureCreated();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

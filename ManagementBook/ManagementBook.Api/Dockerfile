@@ -10,6 +10,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["ManagementBook.Api/ManagementBook.Api.csproj", "ManagementBook.Api/"]
+COPY ["ManagementBook.Application/ManagementBook.Application.csproj", "ManagementBook.Application/"]
+COPY ["ManagementBook.Domain/ManagementBook.Domain.csproj", "ManagementBook.Domain/"]
+COPY ["ManagementBook.Infra.Cross/ManagementBook.Infra.Cross.csproj", "ManagementBook.Infra.Cross/"]
+COPY ["ManagementBook.Infra.Data/ManagementBook.Infra.Data.csproj", "ManagementBook.Infra.Data/"]
 RUN dotnet restore "./ManagementBook.Api/./ManagementBook.Api.csproj"
 COPY . .
 WORKDIR "/src/ManagementBook.Api"

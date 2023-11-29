@@ -4,8 +4,8 @@ using FluentAssertions;
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Data.Base;
 using ManagementBook.Infra.Data.Features.Books;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
 using System.Data.SqlTypes;
@@ -20,7 +20,7 @@ public class BookRepositoryTests
     [SetUp]
     public void SetUp()
     {
-        _bookStoreMock = new ();
+        _bookStoreMock = new (new Mock<IConfigurationRoot>().Object);
         _bookRepository = new (_bookStoreMock.Object);
     }
 

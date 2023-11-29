@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ManagementBook.Domain\ManagementBook.Domain.csproj" />
+    <ProjectReference Include="..\ManagementBook.Infra.Cross\ManagementBook.Infra.Cross.csproj" />
     <ProjectReference Include="..\ManagementBook.Infra.Data\ManagementBook.Infra.Data.csproj" />
   </ItemGroup>
 
