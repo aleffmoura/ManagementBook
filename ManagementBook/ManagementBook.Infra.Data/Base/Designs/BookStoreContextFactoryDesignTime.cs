@@ -6,7 +6,7 @@ using System;
 
 internal class BookStoreContextFactoryDesignTime : IDesignTimeDbContextFactory<BookStoreContext>
 {
-    private string _localConnectionString = @"Server=172.19.0.2;Database=BookStore;User ID=sa;Password=B00kSt0r3;Trusted_Connection=true;";
+    private string _localConnectionString = @"Server=192.168.0.103;Database=BookStore;User ID=sa;Password=B00kSt0r3;TrustServerCertificate=true;";
     public BookStoreContext CreateDbContext(string[] args)
     {
         var builder = new DbContextOptionsBuilder<BookStoreContext>();
