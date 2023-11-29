@@ -14,12 +14,10 @@ using static LanguageExt.Prelude;
 
 public class BookCollectionHandler : IRequestHandler<BookCollectionQuery, Result<IQueryable<Book>>>
 {
-    private IMapper _mapper;
     private IBookRepository _bookRepository;
 
-    public BookCollectionHandler(IMapper mapper, IBookRepository bookRepository)
+    public BookCollectionHandler(IBookRepository bookRepository)
     {
-        _mapper = mapper;
         _bookRepository = bookRepository;
     }
 

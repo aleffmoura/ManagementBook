@@ -5,14 +5,13 @@ using LanguageExt.Common;
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Data.Base;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class BookRepository : IBookRepository
 {
-    private IBaseContext _baseContext;
+    private BookStoreContext _baseContext;
 
-    public BookRepository(IBaseContext baseContext)
+    public BookRepository(BookStoreContext baseContext)
     {
         _baseContext = baseContext;
     }
@@ -23,9 +22,7 @@ public class BookRepository : IBookRepository
     }
 
     public Task<IQueryable<Book>> GetAll()
-    {
-        throw new NotImplementedException();
-    }
+        => _baseContext.AsNoTracking(_baseContext.Books.AsQueryable()).AsTask();
 
     public Task<Result<Unit>> Remove(Guid guid)
     {
