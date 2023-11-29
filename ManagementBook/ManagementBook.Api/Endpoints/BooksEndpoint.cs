@@ -30,12 +30,29 @@ public static class BooksEndpoint
         return app;
     }
 
+    public static WebApplication BookGetByIdEndpoint(this WebApplication app)
+    {
+        app.MapGet($"{_baseEndpoint}/{{id}}",
+                   async ([FromServices] IMediator mediator,
+                          [FromRoute] Guid id) =>
+                   {
+                       var returned = await mediator.Send(new BookByIdQuery(id));
+
+                       return HandleQueryable(returned);
+                   }
+        ).WithName($"GetById{_baseEndpoint}")
+        .WithOpenApi();
+
+        return app;
+    }
+
+    #region Private Methods
     private static IResult HandleQueryable<TSource>(Result<TSource> result)
         => result.Match(succ => Results.Ok(succ),
                         error => HandleFailure(error));
-
     private static IResult HandleFailure<T>(T exception) where T : Exception
         => exception is ValidationException validationError
             ? Results.Problem(detail: JsonSerializer.Serialize(validationError.Errors), statusCode: HttpStatusCode.BadRequest.GetHashCode())
             : ErrorPayload.New(exception).Apply(error => Results.Problem(detail: JsonSerializer.Serialize(error), statusCode: error.ErrorCode.GetHashCode()));
+    #endregion
 }

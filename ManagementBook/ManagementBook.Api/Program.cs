@@ -1,7 +1,6 @@
 using ManagementBook.Api.Endpoints;
 using ManagementBook.Api.Extensions;
 using ManagementBook.Api.Handlers;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +23,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//endpoints
+//Book endpoints
 app.BookGetEndpoint();
+app.BookGetByIdEndpoint();
 
 app.Run();

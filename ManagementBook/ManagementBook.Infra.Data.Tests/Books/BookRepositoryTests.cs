@@ -2,10 +2,10 @@
 
 using FluentAssertions;
 using ManagementBook.Domain.Books;
+using ManagementBook.Infra.Cross.Errors;
 using ManagementBook.Infra.Data.Base;
 using ManagementBook.Infra.Data.Features.Books;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
 using System.Data.SqlTypes;
@@ -20,8 +20,8 @@ public class BookRepositoryTests
     [SetUp]
     public void SetUp()
     {
-        _bookStoreMock = new (new Mock<IConfigurationRoot>().Object);
-        _bookRepository = new (_bookStoreMock.Object);
+        _bookStoreMock = new(new DbContextOptions<BookStoreContext>());
+        _bookRepository = new(_bookStoreMock.Object);
     }
 
     [Test]
@@ -93,5 +93,69 @@ public class BookRepositoryTests
         await action.Should().ThrowAsync<SqlTruncateException>();
         dbSetMock.Verify();
         _bookStoreMock.Verify();
+    }
+
+    [Test]
+    public async Task BookRepositoryTests_GetById_ShouldBeOk()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book bookOnDb = new()
+        {
+            Id = id,
+            Author = "Author",
+            Title = "Title",
+            ReleaseDate = DateTime.Now,
+        };
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+        dbSetMock.Setup(s => s.FindAsync(id))
+                .ReturnsAsync(bookOnDb)
+                .Verifiable();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        //action
+        var result = await _bookRepository.GetById(id);
+
+        //verifies
+        result.IsSuccess.Should().BeTrue();
+        result.IfSucc(b =>
+        {
+            b.Id.Should().Be(id);
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
+    }
+
+    [Test]
+    public async Task BookRepositoryTests_GetById_ShouldBeNotFoundExceptionWithoutThrow()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book? bookOnDb = null;
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+        dbSetMock.Setup(s => s.FindAsync(id))
+                .ReturnsAsync(bookOnDb)
+                .Verifiable();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        //action
+        var result = await _bookRepository.GetById(id);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(b =>
+        {
+            b.Should().BeOfType<NotFoundError>();
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
     }
 }

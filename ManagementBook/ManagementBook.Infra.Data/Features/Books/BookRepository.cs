@@ -3,9 +3,11 @@
 using LanguageExt;
 using LanguageExt.Common;
 using ManagementBook.Domain.Books;
+using ManagementBook.Infra.Cross.Errors;
 using ManagementBook.Infra.Data.Base;
 using System;
 using System.Threading.Tasks;
+using static LanguageExt.Prelude;
 
 public class BookRepository : IBookRepository
 {
@@ -16,10 +18,13 @@ public class BookRepository : IBookRepository
         _baseContext = baseContext;
     }
 
-    public Task<Result<Book>> Get(Predicate<Book> predicate)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Result<Book>> GetById(Guid id)
+        => await TryAsync(async () =>
+             ( await _baseContext.Books.FindAsync(id) )
+                    .Apply(book => book is null
+                        ? new Result<Book>(new NotFoundError($"Book with {{id}}: {id} not found."))
+                        : book))
+        .IfFail(fail => new Result<Book>(new InternalError("Error on GetById, contact the admin.", fail)));
 
     public Task<IQueryable<Book>> GetAll()
         => _baseContext.AsNoTracking(_baseContext.Books.AsQueryable()).AsTask();
