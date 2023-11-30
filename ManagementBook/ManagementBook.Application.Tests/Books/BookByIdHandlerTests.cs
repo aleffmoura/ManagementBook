@@ -5,6 +5,7 @@ using LanguageExt.Common;
 using ManagementBook.Application.Features.Books.Handlers;
 using ManagementBook.Application.Features.Books.Queries;
 using ManagementBook.Domain.Books;
+using ManagementBook.Infra.Cross.Errors;
 using Moq;
 
 public class BookByIdHandlerTests
@@ -19,7 +20,7 @@ public class BookByIdHandlerTests
     }
 
     [Test]
-    public async Task BookByIdQueryHandlerTests_Handle_ShouldBeOk()
+    public async Task BookByIdQueryHandlerTests_Handle_ExistsBook_ShouldBeOk()
     {
         //arrange
         var id = Guid.NewGuid();
@@ -47,6 +48,33 @@ public class BookByIdHandlerTests
         result.IfSucc(book =>
         {
             book.Id.Should().Be(id);
+            _mockRepository.Verify();
+            _mockRepository.VerifyNoOtherCalls();
+        });
+    }
+
+    [Test]
+    public async Task BookByIdQueryHandlerTests_Handle_BookNotFound_ShouldBeError()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        CancellationTokenSource cancellationTokenSource = new();
+        BookByIdQuery bookByIdQuery = new(id);
+
+        Result<Book> response = new(new NotFoundError($"Book with {{id}}: {id} not found."));
+
+        _mockRepository.Setup(r => r.GetById(id))
+                       .ReturnsAsync(response)
+                       .Verifiable();
+
+        //action
+        var result = await _handler.Handle(bookByIdQuery, cancellationTokenSource.Token);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(fail =>
+        {
+            fail.Should().BeOfType<NotFoundError>();
             _mockRepository.Verify();
             _mockRepository.VerifyNoOtherCalls();
         });

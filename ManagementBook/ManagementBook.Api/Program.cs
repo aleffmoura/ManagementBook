@@ -24,7 +24,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 //Book endpoints
-app.BookGetEndpoint();
-app.BookGetByIdEndpoint();
+app.BookGetEndpoint()
+   .BookGetByIdEndpoint();
 
 app.Run();

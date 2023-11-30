@@ -2,6 +2,7 @@
 
 using LanguageExt;
 using LanguageExt.Common;
+using LanguageExt.Pretty;
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Cross.Errors;
 using ManagementBook.Infra.Data.Base;
@@ -20,18 +21,36 @@ public class BookRepository : IBookRepository
 
     public async Task<Result<Book>> GetById(Guid id)
         => await TryAsync(async () =>
-             ( await _baseContext.Books.FindAsync(id) )
-                    .Apply(book => book is null
-                        ? new Result<Book>(new NotFoundError($"Book with {{id}}: {id} not found."))
-                        : book))
-        .IfFail(fail => new Result<Book>(new InternalError("Error on GetById, contact the admin.", fail)));
+                ( await _baseContext.Books.FindAsync(id) )
+                .Apply(book => book is null
+                       ? new Result<Book>(new NotFoundError($"Book with {{id}}: {id} not found."))
+                       : book))
+           .IfFail(fail => new Result<Book>(new InternalError("Error on GetById, contact the admin.", fail)));
 
     public Task<IQueryable<Book>> GetAll()
         => _baseContext.AsNoTracking(_baseContext.Books.AsQueryable()).AsTask();
 
-    public Task<Result<Unit>> Remove(Guid guid)
+    public async Task<Result<Unit>> Remove(Guid guid)
     {
-        throw new NotImplementedException();
+        try
+        {
+            Book? book = await _baseContext.Books.FindAsync(guid);
+
+            var removeAction = async (Book b) =>
+            {
+                _ = _baseContext.Remove(b);
+                await _baseContext.SaveChangesAsync();
+                return unit;
+            };
+
+            return book is null
+                   ? new Result<Unit>(new NotFoundError($"Book with {{id}}: {guid} not found."))
+                   : await removeAction(book);
+        }
+        catch (Exception ex)
+        {
+            return new Result<Unit>(new InternalError($"Error on Remove, contact the admin.", ex));
+        }
     }
 
     public Task<Result<Unit>> Save(Option<Book> book)
