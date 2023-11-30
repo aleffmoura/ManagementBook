@@ -39,7 +39,7 @@ public class BookRepository : IBookRepository
             var removeAction = async (Book b) =>
             {
                 _ = _baseContext.Remove(b);
-                await _baseContext.SaveChangesAsync();
+                _ = await _baseContext.SaveChangesAsync();
                 return unit;
             };
 
@@ -53,9 +53,21 @@ public class BookRepository : IBookRepository
         }
     }
 
-    public Task<Result<Unit>> Save(Option<Book> book)
+    public async Task<Result<Unit>> Save(Option<Book> maybeBook)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return await maybeBook.MatchAsync(async book =>
+            {
+                _ = await _baseContext.Books.AddAsync(book);
+                _ = await _baseContext.SaveChangesAsync();
+                return new Result<Unit>(unit);
+            }, () => new Result<Unit>(new InvalidObjectError("Book cant be null.")).AsTask());
+        }
+        catch (Exception ex)
+        {
+            return new Result<Unit>(new InternalError("Error while try save on DB, contact admin.", ex));
+        }
     }
 
     public Task<Result<Unit>> Update(Option<Book> book)

@@ -1,8 +1,11 @@
 ﻿namespace ManagementBook.Api.Endpoints;
 
+using AutoMapper;
 using FluentValidation;
 using LanguageExt;
 using LanguageExt.Common;
+using ManagementBook.Api.DTOs;
+using ManagementBook.Application.Features.Books.Commands;
 using ManagementBook.Application.Features.Books.Queries;
 using ManagementBook.Infra.Cross.Errors;
 using MediatR;
@@ -46,10 +49,28 @@ public static class BooksEndpoint
         return app;
     }
 
+    public static WebApplication BookPostEndpoint(this WebApplication app)
+    {
+        app.MapPost($"{_baseEndpoint}",
+                   async ([FromServices] IMediator mediator,
+                          [FromServices] IMapper mapper,    
+                          [FromBody] BookCreateDto createDto) =>
+                   {
+                       return HandleCommand(await mediator.Send(mapper.Map<BookSaveCommand>(createDto)));
+                   }
+        ).WithName($"Post{_baseEndpoint}")
+        .WithOpenApi();
+
+        return app;
+    }
+
     #region Private Methods
+    private static IResult HandleCommand<TSource>(Result<TSource> result)
+        => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));
+
     private static IResult HandleQueryable<TSource>(Result<TSource> result)
-        => result.Match(succ => Results.Ok(succ),
-                        error => HandleFailure(error));
+        => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));
+
     private static IResult HandleFailure<T>(T exception) where T : Exception
         => exception is ValidationException validationError
             ? Results.Problem(detail: JsonSerializer.Serialize(validationError.Errors), statusCode: HttpStatusCode.BadRequest.GetHashCode())

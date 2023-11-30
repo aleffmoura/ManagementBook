@@ -16,6 +16,8 @@ public static class ServicesExt
                                                 o => o.CommandTimeout(commandTimeout: 10)));
         services.AddScoped<IBookRepository, BookRepository>();
 
+        services.AddAutoMapper(typeof(Program));
+
         return services;
     }
 }

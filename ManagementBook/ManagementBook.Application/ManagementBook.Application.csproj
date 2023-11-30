@@ -17,8 +17,4 @@
     <ProjectReference Include="..\ManagementBook.Infra.Data\ManagementBook.Infra.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Books\Commands\" />
-  </ItemGroup>
-
 </Project>
