@@ -418,4 +418,154 @@ public class BookRepositoryTests
         });
     }
 
+    [Test]
+    public async Task BookRepositoryTests_Update_ShouldBeOk()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book book = new()
+        {
+            Id = id,
+            Author = "Author",
+            Title = "Title",
+            ReleaseDate = DateTime.Now,
+        };
+        Book bookOnDb = new()
+        {
+            Id = id,
+            Author = "Author updated",
+            Title = "Title updated",
+            ReleaseDate = DateTime.Now,
+        };
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        dbSetMock.Setup(s => s.FindAsync(id))
+                .ReturnsAsync(bookOnDb)
+                .Verifiable();
+
+        dbSetMock.Setup(s => s.Update(It.IsAny<Book>()))
+                 .Verifiable();
+
+        _bookStoreMock.Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                      .Verifiable();
+
+        //action
+        var result = await _bookRepository.Update(book);
+
+        //verifies
+        result.IsSuccess.Should().BeTrue();
+        result.IfSucc(_ =>
+        {
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
+    }
+    [Test]
+    public async Task BookRepositoryTests_Update_FindAsyncNotFoundBook_ShouldBeNotFoundError()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book book = new()
+        {
+            Id = id,
+            Author = "Author",
+            Title = "Title",
+            ReleaseDate = DateTime.Now,
+        };
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        dbSetMock.Setup(s => s.FindAsync(id))
+                .ReturnsAsync((Book?)null)
+                .Verifiable();
+
+        //action
+        var result = await _bookRepository.Update(book);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(fail =>
+        {
+            fail.Should().BeOfType<NotFoundError>();
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
+    }
+    [Test]
+    public async Task BookRepositoryTests_Update_BookNull_ShouldBeInvalidObjectError()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book? book = null;
+
+        //action
+        var result = await _bookRepository.Update(book);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(fail =>
+        {
+            fail.Should().BeOfType<InvalidObjectError>();
+            _bookStoreMock.Verify();
+        });
+    }
+
+    [Test]
+    public async Task BookRepositoryTests_Update_SaveChangesAsyncThrowException_ButReturnInternalError()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book book = new()
+        {
+            Id = id,
+            Author = "Author",
+            Title = "Title",
+            ReleaseDate = DateTime.Now,
+        };
+        Book bookOnDb = new()
+        {
+            Id = id,
+            Author = "Author updated",
+            Title = "Title updated",
+            ReleaseDate = DateTime.Now,
+        };
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        dbSetMock.Setup(s => s.FindAsync(id))
+                .ReturnsAsync(bookOnDb)
+                .Verifiable();
+
+        dbSetMock.Setup(s => s.Update(It.IsAny<Book>()))
+                 .Verifiable();
+
+        _bookStoreMock.Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                      .Throws<SqlTruncateException>()
+                      .Verifiable();
+
+        //action
+        var result = await _bookRepository.Update(book);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(fail =>
+        {
+            fail.Should().BeOfType<InternalError>();
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
+    }
 }

@@ -3,7 +3,6 @@
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Data.Features.Books;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 public class BookStoreContext : DbContext
 {

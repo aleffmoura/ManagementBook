@@ -70,8 +70,26 @@ public class BookRepository : IBookRepository
         }
     }
 
-    public Task<Result<Unit>> Update(Option<Book> book)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Result<Unit>> Update(Option<Book> maybeBook)
+        => await TryAsync(async () => await maybeBook.MatchAsync(async book =>
+            {
+                var bookOnDB = await _baseContext.Books.FindAsync(book.Id);
+
+                var saveAction = async (Book toUpdateBook) =>
+                {
+                    _ = _baseContext.Books.Update(toUpdateBook);
+                    _ = await _baseContext.SaveChangesAsync();
+                    return unit;
+                };
+
+                return bookOnDB is not null
+                       ? await saveAction(bookOnDB with {
+                           Author = book.Author,
+                           Title = book.Title,
+                           ReleaseDate = book.ReleaseDate
+                       })
+                       : new Result<Unit>(new NotFoundError($"Book with {{id}}:{book.Id} notfound"));
+
+            }, () => new Result<Unit>(new InvalidObjectError("Book cant be null.")).AsTask()))
+        .IfFail(fail => new Result<Unit>(new InternalError("Error while try save on DB, contact admin.", fail)));
 }
