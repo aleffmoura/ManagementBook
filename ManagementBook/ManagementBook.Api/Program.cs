@@ -26,6 +26,7 @@ app.UseHttpsRedirection();
 //Book endpoints
 app.BookGetEndpoint()
    .BookGetByIdEndpoint()
-   .BookPostEndpoint();
+   .BookPostEndpoint()
+   .BookPatchEndpoint();
 
 app.Run();

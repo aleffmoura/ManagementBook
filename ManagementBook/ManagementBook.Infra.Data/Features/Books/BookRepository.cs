@@ -6,6 +6,7 @@ using LanguageExt.Pretty;
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Cross.Errors;
 using ManagementBook.Infra.Data.Base;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 using static LanguageExt.Prelude;
@@ -73,7 +74,7 @@ public class BookRepository : IBookRepository
     public async Task<Result<Unit>> Update(Option<Book> maybeBook)
         => await TryAsync(async () => await maybeBook.MatchAsync(async book =>
             {
-                var bookOnDB = await _baseContext.Books.FindAsync(book.Id);
+                Book? bookOnDB = _baseContext.AsNoTracking(_baseContext.Books).FirstOrDefault(f => f.Id == book.Id);
 
                 var saveAction = async (Book toUpdateBook) =>
                 {
@@ -83,7 +84,8 @@ public class BookRepository : IBookRepository
                 };
 
                 return bookOnDB is not null
-                       ? await saveAction(bookOnDB with {
+                       ? await saveAction(bookOnDB with
+                       {
                            Author = book.Author,
                            Title = book.Title,
                            ReleaseDate = book.ReleaseDate

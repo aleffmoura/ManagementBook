@@ -64,6 +64,22 @@ public static class BooksEndpoint
         return app;
     }
 
+    public static WebApplication BookPatchEndpoint(this WebApplication app)
+    {
+        app.MapPatch($"{_baseEndpoint}/{{id}}",
+                   async ([FromServices] IMediator mediator,
+                          [FromServices] IMapper mapper,
+                          [FromRoute] Guid id,
+                          [FromBody] BookUpdateDto updateDto) =>
+                   {
+                       return HandleCommand(await mediator.Send(mapper.Map<BookUpdateCommand>((id, updateDto))));
+                   }
+        ).WithName($"Patch{_baseEndpoint}")
+        .WithOpenApi();
+
+        return app;
+    }
+
     #region Private Methods
     private static IResult HandleCommand<TSource>(Result<TSource> result)
         => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));

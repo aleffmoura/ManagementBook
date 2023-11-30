@@ -12,7 +12,18 @@ public class MappingProfile : Profile
         CreateMap<BookCreateDto, BookSaveCommand>()
             .ForMember(ds => ds.Id, m => m.MapFrom(src => Guid.NewGuid()))
             .ForMember(ds => ds.Released, m => m.MapFrom(src => src.ReleaseData));
+
         CreateMap<BookSaveCommand, Book>()
+            .ForMember(ds => ds.Id, m => m.MapFrom(src => src.Id))
+            .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.Released));
+
+        CreateMap<(Guid id, BookUpdateDto dto), BookUpdateCommand>()
+            .ForMember(ds => ds.Id, m => m.MapFrom(src => src.id))
+            .ForMember(ds => ds.Author, m => m.MapFrom(src => src.dto.Author))
+            .ForMember(ds => ds.Title, m => m.MapFrom(src => src.dto.Title))
+            .ForMember(ds => ds.Released, m => m.MapFrom(src => src.dto.ReleaseData));
+
+        CreateMap<BookUpdateCommand, Book>()
             .ForMember(ds => ds.Id, m => m.MapFrom(src => src.Id))
             .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.Released));
     }

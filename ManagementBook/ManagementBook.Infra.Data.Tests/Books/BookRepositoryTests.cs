@@ -7,6 +7,7 @@ using ManagementBook.Infra.Cross.Errors;
 using ManagementBook.Infra.Data.Base;
 using ManagementBook.Infra.Data.Features.Books;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Moq;
 using System;
 using System.Data.SqlTypes;
@@ -444,9 +445,10 @@ public class BookRepositoryTests
                       .Returns(dbSetMock.Object)
                       .Verifiable();
 
-        dbSetMock.Setup(s => s.FindAsync(id))
-                .ReturnsAsync(bookOnDb)
-                .Verifiable();
+        List<Book> booksOnDb = [bookOnDb];
+        _bookStoreMock.Setup(bs => bs.AsNoTracking(It.IsAny<IQueryable<Book>>()))
+                      .Returns(booksOnDb.AsQueryable())
+                      .Verifiable();
 
         dbSetMock.Setup(s => s.Update(It.IsAny<Book>()))
                  .Verifiable();
@@ -478,15 +480,16 @@ public class BookRepositoryTests
             ReleaseDate = DateTime.Now,
         };
 
+        List<Book> booksOnDb = [ ];
+        _bookStoreMock.Setup(bs => bs.AsNoTracking(It.IsAny<IQueryable<Book>>()))
+                      .Returns(booksOnDb.AsQueryable())
+                      .Verifiable();
+
         var dbSetMock = new Mock<DbSet<Book>>();
 
         _bookStoreMock.SetupGet(bs => bs.Books)
                       .Returns(dbSetMock.Object)
                       .Verifiable();
-
-        dbSetMock.Setup(s => s.FindAsync(id))
-                .ReturnsAsync((Book?)null)
-                .Verifiable();
 
         //action
         var result = await _bookRepository.Update(book);
@@ -518,7 +521,6 @@ public class BookRepositoryTests
             _bookStoreMock.Verify();
         });
     }
-
     [Test]
     public async Task BookRepositoryTests_Update_SaveChangesAsyncThrowException_ButReturnInternalError()
     {
@@ -545,9 +547,10 @@ public class BookRepositoryTests
                       .Returns(dbSetMock.Object)
                       .Verifiable();
 
-        dbSetMock.Setup(s => s.FindAsync(id))
-                .ReturnsAsync(bookOnDb)
-                .Verifiable();
+        List<Book> booksOnDb = [bookOnDb];
+        _bookStoreMock.Setup(bs => bs.AsNoTracking(It.IsAny<IQueryable<Book>>()))
+                      .Returns(booksOnDb.AsQueryable())
+                      .Verifiable();
 
         dbSetMock.Setup(s => s.Update(It.IsAny<Book>()))
                  .Verifiable();
@@ -555,6 +558,53 @@ public class BookRepositoryTests
         _bookStoreMock.Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
                       .Throws<SqlTruncateException>()
                       .Verifiable();
+
+        //action
+        var result = await _bookRepository.Update(book);
+
+        //verifies
+        result.IsFaulted.Should().BeTrue();
+        result.IfFail(fail =>
+        {
+            fail.Should().BeOfType<InternalError>();
+            dbSetMock.Verify();
+            _bookStoreMock.Verify();
+        });
+    }
+    [Test]
+    public async Task BookRepositoryTests_Update_ThrowException_ButReturnInternalError()
+    {
+        //arrange
+        var id = Guid.NewGuid();
+        Book book = new()
+        {
+            Id = id,
+            Author = "Author",
+            Title = "Title",
+            ReleaseDate = DateTime.Now,
+        };
+        Book bookOnDb = new()
+        {
+            Id = id,
+            Author = "Author updated",
+            Title = "Title updated",
+            ReleaseDate = DateTime.Now,
+        };
+
+        var dbSetMock = new Mock<DbSet<Book>>();
+
+        _bookStoreMock.SetupGet(bs => bs.Books)
+                      .Returns(dbSetMock.Object)
+                      .Verifiable();
+
+        List<Book> booksOnDb = [bookOnDb];
+        _bookStoreMock.Setup(bs => bs.AsNoTracking(It.IsAny<IQueryable<Book>>()))
+                      .Returns(booksOnDb.AsQueryable())
+                      .Verifiable();
+
+        dbSetMock.Setup(s => s.Update(It.IsAny<Book>()))
+                 .Throws<SqlTruncateException>()
+                 .Verifiable();
 
         //action
         var result = await _bookRepository.Update(book);
