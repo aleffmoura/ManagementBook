@@ -3,27 +3,40 @@
 using Amazon.S3.Transfer;
 using ManagementBook.Application.Features.Utilities;
 using ManagementBook.Domain.Books;
+using ManagementBook.Infra.Cross.Errors;
+using ManagementBook.Infra.Data.Features.Books;
 using MediatR;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 public class UpdateBookCoverNotificationHandler : INotificationHandler<BookCoverNotification>
 {
-    private IBookRepository _bookRepository;
-    private IUploadService _uploadService;
+    private IServiceProvider _provider;
 
-    public UpdateBookCoverNotificationHandler(IUploadService uploadService, IBookRepository bookRepository)
+    public UpdateBookCoverNotificationHandler(IServiceProvider provider)
     {
-        _uploadService = uploadService;
-        _bookRepository = bookRepository;
+        _provider = provider;
     }
 
     public async Task Handle(BookCoverNotification notification, CancellationToken cancellationToken)
     {
         try
         {
-            await _uploadService.Send(new FileSend
+            var scoped = _provider.CreateScope();
+            var uploadService = scoped.ServiceProvider.GetService<IUploadService>();
+            var bookRepository = scoped.ServiceProvider.GetService<IBookRepository>();
+            var configuration = scoped.ServiceProvider.GetService<IConfigurationRoot>();
+
+            if (uploadService is null || bookRepository is null || configuration is null)
+            {
+                Console.WriteLine("reference not fount for uploadService or bookRepository or configuration");
+                return;
+            }
+
+            await uploadService.Send(new FileSend
             {
                 BookId = notification.BookId,
                 Data = notification.Data,
@@ -31,9 +44,9 @@ public class UpdateBookCoverNotificationHandler : INotificationHandler<BookCover
             {
                 if (e is UploadProgressArgs { PercentDone: 100 } args)
                 {
-                    var book = await _bookRepository.GetById(notification.BookId);
-
-                    book.IfSucc(async b => await _bookRepository.Update(b with { BookCoverUrl = args.FilePath }));
+                    var book = await bookRepository.GetById(notification.BookId);
+                    var url = $"https://{configuration["amazon:s3:bucketName"]}.s3.{configuration["amazon:s3:region"]}.amazonaws.com/{notification.BookId}.png";
+                    book.IfSucc(async b => await bookRepository.Update(b with { BookCoverUrl = url }));
                 }
             });
 

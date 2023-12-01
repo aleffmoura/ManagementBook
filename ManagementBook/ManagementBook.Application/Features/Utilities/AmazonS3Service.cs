@@ -31,8 +31,10 @@ public class AmazonS3Service : IUploadService
                 BucketName = _configuration["amazon:s3:bucketName"],
                 InputStream = stream,
                 Key = $"{send.BookId}.png",
-                CannedACL = S3CannedACL.PublicRead,
             };
+
+            if (bool.Parse(_configuration["amazon:s3:publicRead"] ?? "false"))
+                uploadRequest.CannedACL = S3CannedACL.PublicRead;
 
             EventHandler<UploadProgressArgs> eventProgress = (o, e) => { progresEvent(o, e); };
 

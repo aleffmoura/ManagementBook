@@ -19,7 +19,7 @@ public class AmazonModule : Module
     {
         var endpoint = RegionEndpoint.GetBySystemName(Configuration["amazon:s3:region"]);
 
-        builder.Register(r => new AmazonS3Client(Configuration["amazon:s3:key"], Configuration["amazon:s3:secret"], endpoint))
+        builder.Register(r => new AmazonS3Client(Configuration["amazon:s3:accessKey"], Configuration["amazon:s3:secretAccessKey"], endpoint))
                .As<IAmazonS3>()
                .InstancePerLifetimeScope();
 

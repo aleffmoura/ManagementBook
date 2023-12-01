@@ -30,6 +30,10 @@ public class GlobalModule<TProgram> : Module
                .As<IBookRepository>()
                .InstancePerLifetimeScope();
 
+        builder.Register(_ => Configuration)
+               .As<IConfigurationRoot>()
+               .InstancePerLifetimeScope();
+        
         builder.Register(ctx =>
         {
             var configuration = new MapperConfiguration(cfg =>

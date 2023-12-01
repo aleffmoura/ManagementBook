@@ -1,9 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
+﻿#nullable disable
 
 namespace ManagementBook.Infra.Data.Migrations
 {
+    using Microsoft.EntityFrameworkCore.Migrations;
     /// <inheritdoc />
     public partial class BookCover : Migration
     {

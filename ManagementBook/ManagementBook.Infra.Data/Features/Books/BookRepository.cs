@@ -23,6 +23,13 @@ public class BookRepository : IBookRepository
     public async Task<Result<Book>> GetById(Guid id)
         => await TryAsync(async () =>
                 ( await _baseContext.Books.FindAsync(id) )
+                .Apply(book =>
+                {
+                    var attached = _baseContext.Attach(book);
+                    if (attached is not null)
+                        attached.State = EntityState.Detached;
+                    return book;
+                })
                 .Apply(book => book is null
                        ? new Result<Book>(new NotFoundError($"Book with {{id}}: {id} not found."))
                        : book))
@@ -88,7 +95,8 @@ public class BookRepository : IBookRepository
                        {
                            Author = book.Author,
                            Title = book.Title,
-                           ReleaseDate = book.ReleaseDate
+                           ReleaseDate = book.ReleaseDate,
+                           BookCoverUrl = book.BookCoverUrl
                        })
                        : new Result<Unit>(new NotFoundError($"Book with {{id}}:{book.Id} notfound"));
 

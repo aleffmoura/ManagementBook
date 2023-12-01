@@ -28,15 +28,13 @@ public class AmazonS3ServiceTests
     {
         //arrange
         var bucketName = "bucketName";
-        var key = "key";
 
         _mockConfiguration.Setup(c => c["amazon:s3:bucketName"])
                           .Returns(bucketName)
                           .Verifiable();
 
-        _mockConfiguration.Setup(c => c["amazon:s3:key"])
-                          .Returns(key)
-                          .Verifiable();
+        _mockConfiguration.Setup(c => c["amazon:s3:publicRead"])
+                        .Verifiable();
 
         _mockTransfer.Setup(t => t.UploadAsync(It.IsAny<TransferUtilityUploadRequest>(), It.IsAny<CancellationToken>()))
                      .Verifiable();
@@ -66,15 +64,13 @@ public class AmazonS3ServiceTests
     {
         //arrange
         var bucketName = "bucketName";
-        var key = "key";
 
         _mockConfiguration.Setup(c => c["amazon:s3:bucketName"])
                           .Returns(bucketName)
                           .Verifiable();
 
-        _mockConfiguration.Setup(c => c["amazon:s3:key"])
-                          .Returns(key)
-                          .Verifiable();
+        _mockConfiguration.Setup(c => c["amazon:s3:publicRead"])
+                        .Verifiable();
 
         _mockTransfer.Setup(t => t.UploadAsync(It.IsAny<TransferUtilityUploadRequest>(), It.IsAny<CancellationToken>()))
                      .Throws(new AmazonS3Exception("Error"))
@@ -105,16 +101,10 @@ public class AmazonS3ServiceTests
     public async Task AmazonS3ServiceTests_SendImage_ConfigurationThrowsGenericException_ShouldBeInternalError()
     {
         //arrange
-        var bucketName = "bucketName";
-
         _mockConfiguration.Setup(c => c["amazon:s3:bucketName"])
-                          .Returns(bucketName)
-                          .Verifiable();
-
-        _mockConfiguration.Setup(c => c["amazon:s3:key"])
                           .Throws<ArgumentNullException>()
                           .Verifiable();
-
+        
         FileSend fileSend = new()
         {
             BookId = Guid.NewGuid(),
