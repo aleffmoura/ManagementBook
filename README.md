@@ -1,9 +1,12 @@
 
-## Notas adicionais
+# Notas adicionais
 Devido às características da linguagem C#, a implementação da imutabilidade no estilo de programação orientada a objetos pode ser um pouco complicada.
+
 #### Sei que utilizei muita coisa e o projeto ficou grande mesmo sendo uma situação simples, contudo, dei meu sangue pois as vezes é necessario mostrar nosso estilo de programar, quero deixar claro que sou modular e consigo me adaptar a qualquer estilo necessario para desenvolvimento.
 #### Foi evitada muita coisa para não deixa o projeto complexo alem do necessario.
 
+
+#### O metodo de entrada `PATCH` foi deixado para atualizar a capa do livro, tendo em vista que muda apenas uma propriedade da entidade, foi criado um metodo PUT para atualizar o livro, tendo em vista que ele modifica o objeto por completo, conforme dita o RESTfull.
 
 # Técnicas e Arquitetura
 
@@ -43,4 +46,3 @@ Existem dois projetos de testes:
 ```bash
 dotnet test *.sln
 ```
-Este comando executará todos os testes presentes no arquivo .sln.
