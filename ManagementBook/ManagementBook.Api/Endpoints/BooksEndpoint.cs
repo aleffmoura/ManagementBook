@@ -5,8 +5,10 @@ using FluentValidation;
 using LanguageExt;
 using LanguageExt.Common;
 using ManagementBook.Api.DTOs;
+using ManagementBook.Api.ViewModels;
 using ManagementBook.Application.Features.Books.Commands;
 using ManagementBook.Application.Features.Books.Queries;
+using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Cross.Errors;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -21,11 +23,12 @@ public static class BooksEndpoint
     public static WebApplication BookGetEndpoint(this WebApplication app)
     {
         app.MapGet(_baseEndpoint,
-                   async ([FromServices] IMediator mediator) =>
+                   async ([FromServices] IMediator mediator,
+                          [FromServices] IMapper mapper) =>
                    {
                        var returned = await mediator.Send(new BookCollectionQuery());
 
-                       return HandleQueryable(returned);
+                       return HandleQueryable<Book, BookDetailViewModel>(returned, mapper);
                    }
         ).WithName($"Get{_baseEndpoint}")
         .WithOpenApi();
@@ -37,11 +40,12 @@ public static class BooksEndpoint
     {
         app.MapGet($"{_baseEndpoint}/{{id}}",
                    async ([FromServices] IMediator mediator,
+                          [FromServices] IMapper mapper,
                           [FromRoute] Guid id) =>
                    {
                        var returned = await mediator.Send(new BookByIdQuery(id));
 
-                       return HandleQueryable(returned);
+                       return HandleQuery<Book, BookDetailViewModel>(returned, mapper);
                    }
         ).WithName($"GetById{_baseEndpoint}")
         .WithOpenApi();
@@ -53,7 +57,7 @@ public static class BooksEndpoint
     {
         app.MapPost($"{_baseEndpoint}",
                    async ([FromServices] IMediator mediator,
-                          [FromServices] IMapper mapper,    
+                          [FromServices] IMapper mapper,
                           [FromBody] BookCreateDto createDto) =>
                    {
                        return HandleCommand(await mediator.Send(mapper.Map<BookSaveCommand>(createDto)));
@@ -84,8 +88,10 @@ public static class BooksEndpoint
     private static IResult HandleCommand<TSource>(Result<TSource> result)
         => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));
 
-    private static IResult HandleQueryable<TSource>(Result<TSource> result)
-        => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));
+    private static IResult HandleQuery<TSource, TDestiny>(Result<TSource> result, IMapper m)
+        => result.Match(succ => Results.Ok(m.Map<TDestiny>(succ)), error => HandleFailure(error));
+    private static IResult HandleQueryable<TSource, TDestiny>(Result<IQueryable<TSource>> result, IMapper m)
+        => result.Match(succ => Results.Ok(m.ProjectTo<TDestiny>(succ, m.ConfigurationProvider)), error => HandleFailure(error));
 
     private static IResult HandleFailure<T>(T exception) where T : Exception
         => exception is ValidationException validationError

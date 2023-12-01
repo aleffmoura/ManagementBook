@@ -2,6 +2,7 @@
 
 using AutoMapper;
 using ManagementBook.Api.DTOs;
+using ManagementBook.Api.ViewModels;
 using ManagementBook.Application.Features.Books.Commands;
 using ManagementBook.Domain.Books;
 
@@ -26,5 +27,17 @@ public class MappingProfile : Profile
         CreateMap<BookUpdateCommand, Book>()
             .ForMember(ds => ds.Id, m => m.MapFrom(src => src.Id))
             .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.Released));
+
+        CreateMap<Book, BookDetailViewModel>()
+            .ForMember(ds => ds.Guid, m => m.MapFrom(src => src.Id))
+            .ForMember(ds => ds.Author, m => m.MapFrom(src => src.Author))
+            .ForMember(ds => ds.Title, m => m.MapFrom(src => src.Title))
+            .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.ReleaseDate.ToString("dd/MM/yyyy")));
+
+        CreateMap<Book, BookResumeViewModel>()
+            .ForMember(ds => ds.Guid, m => m.MapFrom(src => src.Id))
+            .ForMember(ds => ds.Author, m => m.MapFrom(src => src.Author))
+            .ForMember(ds => ds.Title, m => m.MapFrom(src => src.Title))
+            .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.ReleaseDate.ToString("dd/MM/yyyy")));
     }
 }
