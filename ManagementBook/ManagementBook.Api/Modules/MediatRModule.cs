@@ -2,7 +2,6 @@
 using Autofac;
 using ManagementBook.Api.Behaviors;
 using ManagementBook.Application;
-
 using MediatR;
 using System.Reflection;
 using Module = Autofac.Module;
@@ -27,6 +26,9 @@ public class MediatRModule : Module
                .AsClosedTypesOf(typeof(INotificationHandler<>))
                .AsImplementedInterfaces()
                .InstancePerLifetimeScope();
+
+        builder.RegisterGeneric(typeof(LoggingBehavior<,>))
+               .As(typeof(IPipelineBehavior<,>));
 
         builder.RegisterGeneric(typeof(ValidatorBehavior<,>))
                .As(typeof(IPipelineBehavior<,>));

@@ -39,5 +39,9 @@ public class MappingProfile : Profile
             .ForMember(ds => ds.Author, m => m.MapFrom(src => src.Author))
             .ForMember(ds => ds.Title, m => m.MapFrom(src => src.Title))
             .ForMember(ds => ds.ReleaseDate, m => m.MapFrom(src => src.ReleaseDate.ToString("dd/MM/yyyy")));
+
+        CreateMap<(Guid id, BookCoverPatchDto dto), BookPatchCommand>()
+            .ForMember(ds => ds.BookId, m => m.MapFrom(src => src.id))
+            .ForMember(ds => ds.Data, m => m.MapFrom(src => src.dto.Data));
     }
 }

@@ -2,19 +2,15 @@
 
 using AutoMapper;
 using FluentValidation;
-using LanguageExt;
-using LanguageExt.Common;
 using ManagementBook.Api.DTOs;
 using ManagementBook.Api.ViewModels;
 using ManagementBook.Application.Features.Books.Commands;
 using ManagementBook.Application.Features.Books.Queries;
 using ManagementBook.Domain.Books;
-using ManagementBook.Infra.Cross.Errors;
 using MediatR;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Text.Json;
+using static BaseEndpointMethod;
 
 public static class BooksEndpoint
 {
@@ -68,9 +64,9 @@ public static class BooksEndpoint
         return app;
     }
 
-    public static WebApplication BookPatchEndpoint(this WebApplication app)
+    public static WebApplication BookPutEndpoint(this WebApplication app)
     {
-        app.MapPatch($"{_baseEndpoint}/{{id}}",
+        app.MapPut($"{_baseEndpoint}/{{id}}",
                    async ([FromServices] IMediator mediator,
                           [FromServices] IMapper mapper,
                           [FromRoute] Guid id,
@@ -78,24 +74,31 @@ public static class BooksEndpoint
                    {
                        return HandleCommand(await mediator.Send(mapper.Map<BookUpdateCommand>((id, updateDto))));
                    }
-        ).WithName($"Patch{_baseEndpoint}")
+        ).WithName($"Put{_baseEndpoint}")
         .WithOpenApi();
 
         return app;
     }
 
-    #region Private Methods
-    private static IResult HandleCommand<TSource>(Result<TSource> result)
-        => result.Match(succ => Results.Ok(succ), error => HandleFailure(error));
+    public static WebApplication BookPatchEndpoint(this WebApplication app)
+    {
+        app.MapPatch($"{_baseEndpoint}/{{id}}",
+                   async ([FromServices] IMediator mediator,
+                          [FromServices] IMapper mapper,
+                          [FromRoute] Guid id,
+                          [FromForm] IFormFile file) =>
+                   {
+                       using var memoryStream = new MemoryStream();
+                       await file.CopyToAsync(memoryStream);
 
-    private static IResult HandleQuery<TSource, TDestiny>(Result<TSource> result, IMapper m)
-        => result.Match(succ => Results.Ok(m.Map<TDestiny>(succ)), error => HandleFailure(error));
-    private static IResult HandleQueryable<TSource, TDestiny>(Result<IQueryable<TSource>> result, IMapper m)
-        => result.Match(succ => Results.Ok(m.ProjectTo<TDestiny>(succ, m.ConfigurationProvider)), error => HandleFailure(error));
+                       var dto = new BookCoverPatchDto() { Data = memoryStream.ToArray() };
+                       return HandleAccepted(await mediator.Send(mapper.Map<BookPatchCommand>((id, dto))));
+                   }
+        ).WithName($"Patch{_baseEndpoint}")
+        .WithOpenApi()
+        .WithMetadata(new RequireAntiforgeryTokenAttribute(false));
 
-    private static IResult HandleFailure<T>(T exception) where T : Exception
-        => exception is ValidationException validationError
-            ? Results.Problem(detail: JsonSerializer.Serialize(validationError.Errors), statusCode: HttpStatusCode.BadRequest.GetHashCode())
-            : ErrorPayload.New(exception).Apply(error => Results.Problem(detail: JsonSerializer.Serialize(error), statusCode: error.ErrorCode.GetHashCode()));
-    #endregion
+        return app;
+    }
+
 }

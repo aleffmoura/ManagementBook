@@ -13,5 +13,6 @@ public class BookEntityConfiguration : IEntityTypeConfiguration<Book>
         builder.Property(b => b.Title).IsRequired();
         builder.Property(b => b.Author).IsRequired();
         builder.Property(b => b.ReleaseDate).IsRequired();
+        builder.Property(b => b.BookCoverUrl);
     }
 }

@@ -3,6 +3,7 @@ using Autofac;
 
 using AutoMapper;
 using ManagementBook.Application;
+using ManagementBook.Application.Features.Utilities;
 using ManagementBook.Domain.Books;
 using ManagementBook.Infra.Data.Base;
 using ManagementBook.Infra.Data.Features.Books;
@@ -18,8 +19,6 @@ public class GlobalModule<TProgram> : Module
     }
     protected override void Load(ContainerBuilder builder)
     {
-        //services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssembly>());
-
         builder.Register(context =>
         {
             var optionsBuilder = new DbContextOptionsBuilder<BookStoreContext>();
