@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 public class BookStoreContext : DbContext
 {
     public virtual DbSet<Book> Books { get; set; }
-    
+
     public BookStoreContext(DbContextOptions<BookStoreContext> configuration) : base(configuration)
     {
-        Database?.EnsureCreated();
+        Database?.Migrate();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
