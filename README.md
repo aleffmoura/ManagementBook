@@ -2,6 +2,8 @@
 # Notas adicionais
 Devido às características da linguagem C#, a implementação da imutabilidade no estilo de programação orientada a objetos pode ser um pouco complicada.
 
+`existe um arquivo BookStore.postman_collection.json que pode ser importado para o postman para testes caso não queira usar swagger`
+
 #### Sei que utilizei muita coisa e o projeto ficou grande mesmo sendo uma situação simples, contudo, dei meu sangue pois as vezes é necessario mostrar nosso estilo de programar, quero deixar claro que sou modular e consigo me adaptar a qualquer estilo necessario para desenvolvimento.
 #### Foi evitada muita coisa para não deixa o projeto complexo alem do necessario.
 
